@@ -97,12 +97,13 @@ const cards = [
 
 function KPICardInner({ card, kpiData }) {
   const rawValue  = kpiData?.[card.key]      ?? 0
-  const trend     = kpiData?.[card.trendKey] ?? 0
+  const trend     = Number(kpiData?.[card.trendKey] ?? 0)
   const animatedValue = useAnimatedCounter(rawValue, 1600, card.decimals)
   const sparkData = MOCK_SPARKLINES[card.sparklineKey] || []
 
   const trendPositive = card.invertTrend ? trend < 0 : trend > 0
   const trendNeutral  = trend === 0
+  const trendLabel    = trendNeutral ? '' : `${Math.abs(trend)}%`
 
   const displayValue =
     card.suffix === 'ms' || card.suffix === ' Mbps' || card.suffix === '%'
@@ -162,26 +163,20 @@ function KPICardInner({ card, kpiData }) {
           </motion.span>
 
           {/* Trend pill */}
-          <div className={`flex items-center gap-0.5 text-[10px] font-mono pb-0.5 ${
-            trendNeutral ? '' : trendPositive ? '' : ''
-          }`}
-            style={{ color: trendNeutral ? 'var(--text-muted)' : trendPositive ? '#0d9488' : '#ef4444' }}>
-            {trendNeutral ? <Minus size={10}/> : trendPositive ? <TrendingUp size={10}/> : <TrendingDown size={10}/>}
-            {Math.abs(trend)}%
-          </div>
+          {!trendNeutral && (
+            <div className={`flex items-center gap-0.5 text-[10px] font-mono pb-0.5 ${
+              trendPositive ? '' : ''
+            }`}
+              style={{ color: trendPositive ? '#0d9488' : '#ef4444' }}>
+              {trendPositive ? <TrendingUp size={10}/> : <TrendingDown size={10}/>}
+              {trendLabel}
+            </div>
+          )}
         </div>
 
-        {/* Sparkline + badge */}
+        {/* Sparkline */}
         <div className="flex items-center justify-between">
           <MiniChart data={sparkData} color={card.accent} />
-          <span className="text-[9px] font-mono px-2 py-0.5 rounded-full"
-            style={{
-              background: trendPositive ? 'rgba(13,148,136,0.10)' : 'rgba(239,68,68,0.10)',
-              border: `1px solid ${trendPositive ? 'rgba(13,148,136,0.22)' : 'rgba(239,68,68,0.22)'}`,
-              color: trendPositive ? '#0d9488' : '#ef4444',
-            }}>
-            {trendPositive ? '▲' : '▼'} vs last week
-          </span>
         </div>
       </div>
     </motion.div>

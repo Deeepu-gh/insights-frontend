@@ -118,23 +118,54 @@ function CarrierSpeedChart() {
 }
 
 // ─── Carrier Quality Radar (carrier-scores) ───────────────────────────────────
+const CARRIER_COLOR_MAP = {
+  'AT&T': '#ef4444',
+  'T-Mobile': '#0d9488',
+  'Verizon': '#7c3aed',
+  'Jio': '#2563eb',
+  'Airtel': '#0d9488',
+  'Vodafone': '#7c3aed',
+}
+const CARRIER_COLORS = ['#2563eb', '#0d9488', '#7c3aed', '#f59e0b', '#ef4444']
+
 function CarrierRadarChart() {
   const { data: scores, loading } = useCarrierScores()
 
-  // Build radar from live scores; fill mock dimensions with estimates
-  const radarData = scores ? (() => {
-    const byCarrier = Object.fromEntries(scores.map(s => [s.carrier, s.quality_score]))
-    return [
-      { metric: 'Quality',  ...Object.fromEntries(scores.map(s => [s.carrier, s.quality_score])) },
-      { metric: 'Speed',    ...Object.fromEntries(scores.map(s => [s.carrier, Math.round(s.quality_score * 0.95 + 5)])) },
-      { metric: 'Latency',  ...Object.fromEntries(scores.map(s => [s.carrier, Math.round(s.quality_score * 0.90)])) },
-      { metric: 'Uptime',   ...Object.fromEntries(scores.map(s => [s.carrier, Math.round(s.quality_score * 0.98 + 2)])) },
-      { metric: 'Coverage', ...Object.fromEntries(scores.map(s => [s.carrier, Math.round(s.quality_score * 0.92 + 3)])) },
-    ]
-  })() : []
+  const carriers = scores?.map((s, i) => {
+    const safeKey = `carrier_${i}`
+    const scaledQuality = typeof s.quality_score === 'number' ? Math.round(s.quality_score * 100) : 0
+    return {
+      carrier: s.carrier,
+      key: safeKey,
+      color: CARRIER_COLOR_MAP[s.carrier] || CARRIER_COLORS[i % CARRIER_COLORS.length],
+      quality: scaledQuality,
+      speed: Math.round(scaledQuality * 0.95 + 5),
+      latency: Math.round(scaledQuality * 0.90),
+      uptime: Math.round(scaledQuality * 0.98 + 2),
+      coverage: Math.round(scaledQuality * 0.92 + 3),
+    }
+  }) || []
 
-  const CARRIER_COLORS = ['#2563eb', '#0d9488', '#7c3aed', '#f59e0b', '#ef4444']
-  const carriers = scores?.map((s, i) => ({ key: s.carrier, color: CARRIER_COLORS[i % CARRIER_COLORS.length] })) || []
+  // Detect if all carriers have identical metric values (causes exact overlap)
+  const allSame = carriers.length > 1 && carriers.every((c, _, arr) => (
+    c.quality === arr[0].quality && c.speed === arr[0].speed && c.latency === arr[0].latency && c.uptime === arr[0].uptime && c.coverage === arr[0].coverage
+  ))
+
+  // Small visual jitter to separate exactly overlapping traces when backend returns identical values
+  const radarData = carriers.length ? [
+    { metric: 'Quality',  ...Object.fromEntries(carriers.map((c, i) => [c.key, c.quality + (allSame ? i * 0.9 : 0)])) },
+    { metric: 'Speed',    ...Object.fromEntries(carriers.map((c, i) => [c.key, c.speed   + (allSame ? i * 0.9 : 0)])) },
+    { metric: 'Latency',  ...Object.fromEntries(carriers.map((c, i) => [c.key, c.latency + (allSame ? i * 0.9 : 0)])) },
+    { metric: 'Uptime',   ...Object.fromEntries(carriers.map((c, i) => [c.key, c.uptime  + (allSame ? i * 0.9 : 0)])) },
+    { metric: 'Coverage', ...Object.fromEntries(carriers.map((c, i) => [c.key, c.coverage + (allSame ? i * 0.9 : 0)])) },
+  ] : []
+
+  // Debug: log backend scores and computed radar data (helps diagnose identical values)
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug('[CarrierRadar] raw scores:', scores)
+    console.debug('[CarrierRadar] carriers (processed):', carriers)
+    console.debug('[CarrierRadar] radarData:', radarData)
+  }
 
   return (
     <ChartCard title="Carrier Quality Radar" subtitle="Multi-dimensional performance score">
@@ -143,9 +174,27 @@ function CarrierRadarChart() {
           <RadarChart data={radarData} margin={{ top: 4, right: 20, left: 20, bottom: 4 }}>
             <PolarGrid stroke="rgba(15,23,42,0.06)" />
             <PolarAngleAxis dataKey="metric" tick={{ fill: 'rgba(15,23,42,0.55)', fontSize: 9, fontFamily: 'IBM Plex Mono' }} />
-            {carriers.map(({ key, color }) => (
-              <Radar key={key} name={key} dataKey={key} stroke={color} fill={color} fillOpacity={0.08} strokeWidth={1.5} />
-            ))}
+            {carriers.map(({ key, carrier, color }, idx) => {
+              // provide a set of dash patterns to help distinguish overlapping strokes
+              const dashPatterns = ['0', '6 4', '3 3', '2 2', '8 3 2 3']
+              return (
+                <Radar
+                  key={key}
+                  name={carrier}
+                  dataKey={key}
+                  stroke={color}
+                  fill={color}
+                  // make fills subtle so overlapping areas don't hide other traces
+                  fillOpacity={0.08}
+                  strokeWidth={2.5}
+                  strokeOpacity={1}
+                  dot={{ fill: color, stroke: '#fff', r: 4 }}
+                  activeDot={{ r: 5 }}
+                  legendType="square"
+                  strokeDasharray={dashPatterns[idx % dashPatterns.length]}
+                />
+              )
+            })}
             <Legend wrapperStyle={{ fontSize: '9px', fontFamily: 'IBM Plex Mono', color: 'rgba(15,23,42,0.5)', paddingTop: 8 }} />
             <Tooltip content={<CustomTooltip unit="" />} />
           </RadarChart>

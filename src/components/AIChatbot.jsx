@@ -24,25 +24,6 @@ const SOURCE_COLORS = {
 // Sample questions removed per user request
 const SUGGESTIONS = []
 
-const MOCK_RESPONSES = [
-  {
-    text: 'Average latency during peak hours (6PM–10PM) across all regions is **78.4ms**, which is 42% higher than the off-peak baseline of 55.2ms. Mumbai and Delhi corridors are primary contributors, with congestion levels reaching 94% on 5G nodes during peak traffic.',
-    source: 'NLQ_AGENT',
-  },
-  {
-    text: 'Jio leads South India with a composite quality score of **92.4/100**, followed by Airtel at 88.1. Chennai and Bangalore markets show the strongest 5G performance with average download speeds of 156 Mbps and jitter below 5ms. Vi and BSNL trail significantly at 74.2 and 66.8 respectively.',
-    source: 'INSIGHT_ENGINE',
-  },
-  {
-    text: 'In the last 24 hours, the anomaly engine detected **18 events**: 7 critical latency spikes exceeding 200ms, 5 packet loss events above 10%, 4 mass drop events affecting 84+ calls each, and 2 congestion saturation points at 98%+ utilization. Most affected regions: Mumbai (6 events), Delhi (5), Bangalore (4).',
-    source: 'ANOMALY_AGENT',
-  },
-  {
-    text: 'Based on historical patterns and third-party event calendars, the predictive model forecasts **88–94% network utilization** tomorrow evening (7PM–10PM IST). Recommend pre‑emptive load balancing activation at 6:30PM on Western Mumbai and North Delhi 5G clusters.',
-    source: 'NLQ_CACHE',
-  },
-]
-
 // Normalize source names from backend to internal format
 function normalizeSource(source) {
   if (!source) return 'INSIGHT_ENGINE'
@@ -181,7 +162,7 @@ export default function AIChatbot({ open, onClose }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [minimized, setMinimized] = useState(false)
-  const [mockIdx, setMockIdx] = useState(0)
+
   const [chatHeight, setChatHeight] = useState(DEFAULT_HEIGHT)
   const [isResizing, setIsResizing] = useState(false)
   const bottomRef = useRef(null)
@@ -345,13 +326,11 @@ export default function AIChatbot({ open, onClose }) {
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
       }])
     } catch (error) {
-      const fallback = MOCK_RESPONSES[mockIdx % MOCK_RESPONSES.length]
-      setMockIdx(i => i + 1)
-      await new Promise(resolve => setTimeout(resolve, 900))
+      console.error('[AIChatbot] Error:', error.message)
       setMessages(prev => [...prev, {
         role: 'assistant',
-        text: fallback.text,
-        source: fallback.source,
+        text: `❌ Backend Error: ${error.message}. Please check if the backend server is running at http://localhost:9021`,
+        source: 'INSIGHT_ENGINE',
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
       }])
     } finally {

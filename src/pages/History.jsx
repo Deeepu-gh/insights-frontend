@@ -146,13 +146,6 @@ export default function HistoryPage() {
           <h1 className="text-2xl font-display font-bold" style={{ color: '#0f172a' }}>Query History</h1>
           <p className="text-sm font-body mt-1" style={{ color: '#475569' }}>All NLQ interactions and AI responses</p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-body transition-colors"
-          style={{ background: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.08)', color: DIMMED }}
-        >
-          <Download size={12} /> Export CSV
-        </motion.button>
       </div>
 
       {/* Filters */}

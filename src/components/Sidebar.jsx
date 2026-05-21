@@ -9,7 +9,7 @@ import {
 
 const navItems = [
   { to: '/',         icon: LayoutDashboard, label: 'Dashboard',  badge: null },
-  { to: '/alerts',   icon: AlertTriangle,   label: 'Alerts',     badge: '6' },
+  { to: '/alerts',   icon: AlertTriangle,   label: 'Alerts',     badge: null },
   // { to: '/ai-bot',   icon: MessageSquare,   label: 'Ask AI Bot', badge: 'AI' },
   { to: '/history',  icon: History,         label: 'History',    badge: null },
   // { to: '/analytics',icon: BarChart3,       label: 'Analytics',  badge: null },
