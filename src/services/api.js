@@ -68,6 +68,10 @@ export const fetchHistory         = () => api.get('/insights/history')
 
 // ─── Health ──────────────────────────────────────────────────────────────────
 export const healthCheck          = () => api.get('/insights/health')
+export const fetchSystemStatus    = () => {
+  console.log('Fetching system status from:', BASE_URL + '/system/status')
+  return api.get('/system/status')
+}
 
 // ─── Current User ────────────────────────────────────────────────────────────
 export const getCurrentUser       = () => api.get('/insights/me')

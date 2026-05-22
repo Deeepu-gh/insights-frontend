@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ChevronDown, ChevronUp, Clock, Download } from 'lucide-react'
+import { Search, ChevronDown, ChevronUp, Clock, Download, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useHistory } from '../hooks/index'
 import { pageTransition, staggerItem } from '../animations/variants'
 
@@ -220,17 +220,28 @@ export default function HistoryPage() {
             {filtered.length} result{filtered.length !== 1 ? 's' : ''} · Page {page} of {totalPages}
           </span>
           <div className="flex gap-1.5">
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <button key={i} onClick={() => setPage(i + 1)}
-                className="w-7 h-7 rounded-lg text-xs font-mono transition-all"
-                style={{
-                  color:      page === i + 1 ? '#2563eb' : DIMMED,
-                  background: page === i + 1 ? 'rgba(37,99,235,0.08)' : 'transparent',
-                  border:     page === i + 1 ? '1px solid rgba(37,99,235,0.2)' : '1px solid transparent',
-                }}>
-                {i + 1}
-              </button>
-            ))}
+            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+              style={{
+                color:      page === 1 ? DIMMED : '#2563eb',
+                background: page === 1 ? 'transparent' : 'rgba(37,99,235,0.08)',
+                border:     page === 1 ? '1px solid transparent' : '1px solid rgba(37,99,235,0.2)',
+                opacity:    page === 1 ? 0.5 : 1,
+                cursor:     page === 1 ? 'not-allowed' : 'pointer',
+              }}>
+              <ChevronLeft size={14} />
+            </button>
+            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages}
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+              style={{
+                color:      page === totalPages ? DIMMED : '#2563eb',
+                background: page === totalPages ? 'transparent' : 'rgba(37,99,235,0.08)',
+                border:     page === totalPages ? '1px solid transparent' : '1px solid rgba(37,99,235,0.2)',
+                opacity:    page === totalPages ? 0.5 : 1,
+                cursor:     page === totalPages ? 'not-allowed' : 'pointer',
+              }}>
+              <ChevronRight size={14} />
+            </button>
           </div>
         </div>
       </div>

@@ -3,9 +3,9 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, AlertTriangle, MessageSquare, History,
-  BarChart3, Settings, ChevronLeft, ChevronRight, Wifi,
-  Activity, TrendingUp, Shield,Map
+  BarChart3, Settings, ChevronLeft, ChevronRight, Map
 } from 'lucide-react'
+import { useKPI } from '../hooks/index'
 
 const navItems = [
   { to: '/',         icon: LayoutDashboard, label: 'Dashboard',  badge: null },
@@ -17,19 +17,11 @@ const navItems = [
   to: '/map', icon: Map, label: 'Map', badge: null
 },
   { to: '/settings', icon: Settings,        label: 'Settings',   badge: null },
-  
-  
-]
-
-const stats = [
-  { label: 'Uptime', value: '99.8%',   icon: Activity,   color: '#0d9488' },
-  { label: 'Nodes',  value: '2,841',   icon: Wifi,       color: '#2563eb' },
-  { label: 'QoS',    value: '87.4',    icon: TrendingUp, color: '#7c3aed' },
-  { label: 'Secure', value: 'AES-256', icon: Shield,     color: '#f59e0b' },
 ]
 
 export default function Sidebar({ mobileOpen, onMobileClose, onCollapsedChange }) {
   const [collapsed, setCollapsed] = useState(false)
+  const { data: kpiData } = useKPI()
 
   const handleCollapsedChange = (newState) => {
     setCollapsed(newState)
@@ -37,6 +29,8 @@ export default function Sidebar({ mobileOpen, onMobileClose, onCollapsedChange }
       onCollapsedChange(newState)
     }
   }
+
+
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -114,33 +108,10 @@ export default function Sidebar({ mobileOpen, onMobileClose, onCollapsedChange }
         ))}
       </nav>
 
-      {/* Bottom stats panel */}
-      {!collapsed && (
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="p-4 m-3 rounded-2xl"
-          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--bg-card-border)' }}
-        >
-          <p className="text-[9px] font-mono uppercase tracking-[0.2em] mb-3"
-            style={{ color: 'var(--text-muted)' }}>System Status</p>
-          <div className="grid grid-cols-2 gap-2">
-            {stats.map(({ label, value, icon: Icon, color }) => (
-              <div key={label} className="flex flex-col gap-1">
-                <div className="flex items-center gap-1.5">
-                  <Icon size={10} style={{ color }} />
-                  <span className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>{label}</span>
-                </div>
-                <span className="text-xs font-mono font-semibold" style={{ color }}>{value}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
       {!collapsed && (
         <div className="px-6 pb-4">
           <p className="text-[9px] font-mono text-center" style={{ color: 'var(--text-muted)' }}>
-            TELECOM INSIGHT · BUILD 2024.3.15
+            TELECOM INSIGHT · {new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }).replace(/\//g, '.')}
           </p>
         </div>
       )}

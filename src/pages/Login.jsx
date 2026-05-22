@@ -19,9 +19,10 @@ import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 
+// Demo credentials removed - use OAuth only
 const DEMO_CREDENTIALS = {
-  username: 'admin',
-  password: 'telecom2024',
+  username: '',
+  password: '',
 }
 
 const networkNodes = [
@@ -89,7 +90,7 @@ export default function LoginPage() {
     ) {
       login(username, `${username.toLowerCase()}@telecom.ai`)
     } else {
-      setError('Invalid credentials. Use admin / telecom2024 to proceed.')
+      setError('Invalid credentials. Please use Google OAuth to sign in.')
       setLoading(false)
     }
   }

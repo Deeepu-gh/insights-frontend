@@ -162,6 +162,8 @@ export default function AIChatbot({ open, onClose }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [minimized, setMinimized] = useState(false)
+  const [logQueries, setLogQueries] = useState(true)
+  const [cacheResponses, setCacheResponses] = useState(true)
 
   const [chatHeight, setChatHeight] = useState(DEFAULT_HEIGHT)
   const [isResizing, setIsResizing] = useState(false)
@@ -180,11 +182,26 @@ export default function AIChatbot({ open, onClose }) {
       }
     }
     
-    // Restore saved height
-    const savedHeight = localStorage.getItem(HEIGHT_STORAGE_KEY)
-    if (savedHeight) {
-      setChatHeight(savedHeight)
+    // Load settings
+    const loadSettings = () => {
+      try {
+        const settings = localStorage.getItem('platformSettings')
+        if (settings) {
+          const parsed = JSON.parse(settings)
+          setLogQueries(parsed.logQueries !== false)
+          setCacheResponses(parsed.cacheResponses !== false)
+          console.log('[AIChatbot] Settings loaded:', { logQueries: parsed.logQueries !== false, cacheResponses: parsed.cacheResponses !== false })
+        }
+      } catch (err) {
+        console.error('[AIChatbot] Failed to load settings:', err)
+      }
     }
+    
+    loadSettings()
+    
+    // Check for settings changes
+    const settingsInterval = setInterval(loadSettings, 5000)
+    return () => clearInterval(settingsInterval)
   }, [])
 
   useEffect(() => {
@@ -194,8 +211,24 @@ export default function AIChatbot({ open, onClose }) {
   }, [open, minimized])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
-  }, [messages])
+    // Restore saved height
+    const savedHeight = localStorage.getItem(HEIGHT_STORAGE_KEY)
+    if (savedHeight) {
+      setChatHeight(savedHeight)
+    }
+  }, [])
+
+  useEffect(() => {
+    // Only save messages if query logging is enabled
+    if (logQueries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+      console.log('[AIChatbot] Messages saved to history (logging enabled)')
+    } else {
+      // Clear saved messages if logging is disabled
+      localStorage.removeItem(STORAGE_KEY)
+      console.log('[AIChatbot] Messages not saved (logging disabled)')
+    }
+  }, [messages, logQueries])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -360,7 +393,7 @@ export default function AIChatbot({ open, onClose }) {
         animate="animate"
         exit="exit"
         onClick={(e) => e.stopPropagation()}
-        className="fixed bottom-6 right-6 z-50 flex flex-col"
+        className="fixed top-4 right-6 z-50 flex flex-col"
         ref={chatContainerRef}
         style={{ width: minimized ? 320 : 520, height: chatHeight, maxHeight: MAX_HEIGHT }}
       >

@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertCircle, AlertTriangle, Info, RefreshCw, Download, Filter } from 'lucide-react'
+import { AlertCircle, AlertTriangle, Info, RefreshCw, Filter } from 'lucide-react'
 import { useAnomalies } from '../hooks/index'
 import { pageTransition, staggerItem } from '../animations/variants'
 
@@ -271,9 +271,6 @@ export default function AlertsPage() {
           <button onClick={() => refetchAlerts()}
             className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white transition hover:bg-white/10">
             <RefreshCw size={16} /> Refresh
-          </button>
-          <button className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white transition hover:bg-white/10">
-            <Download size={16} /> Export
           </button>
         </div>
       </div>

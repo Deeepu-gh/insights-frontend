@@ -6,7 +6,7 @@ import {
   Loader2
 } from 'lucide-react'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 import KPICards from '../components/KPICard'
 import AlertPanel from '../components/AlertPanel'
@@ -39,17 +39,79 @@ export default function Dashboard() {
   // =====================================================
 
   const [downloadingPDF, setDownloadingPDF] = useState(false)
+  const [refreshInterval, setRefreshInterval] = useState(30)
 
   // =====================================================
   // REFRESH HANDLER
   // =====================================================
 
-  const handleRefresh = () => {
-
+  const handleRefresh = useCallback(() => {
+    console.log('Dashboard: Triggering data refresh...')
     refetchKPI()
-
     refetchAnomalies()
-  }
+    console.log('Dashboard: Data refresh triggered')
+  }, [refetchKPI, refetchAnomalies])
+
+  // =====================================================
+  // AUTO-REFRESH FROM SETTINGS
+  // =====================================================
+
+  useEffect(() => {
+    // Load refresh interval from settings
+    const loadRefreshSettings = () => {
+      try {
+        const settings = localStorage.getItem('platformSettings')
+        if (settings) {
+          const parsed = JSON.parse(settings)
+          const autoRefresh = parsed.autoRefresh !== false // default to true
+          const intervalValue = parsed.refreshInterval ? parseInt(parsed.refreshInterval) : 30
+          
+          if (autoRefresh) {
+            setRefreshInterval(intervalValue)
+            console.log('Dashboard: Refresh interval set to', intervalValue, 'seconds')
+          } else {
+            console.log('Dashboard: Auto-refresh is disabled')
+            setRefreshInterval(0)
+          }
+        }
+      } catch (err) {
+        console.error('Dashboard: Failed to load refresh settings:', err)
+      }
+    }
+    
+    loadRefreshSettings()
+
+    // Check for settings changes every 5 seconds
+    const settingsCheckInterval = setInterval(loadRefreshSettings, 5000)
+
+    return () => clearInterval(settingsCheckInterval)
+  }, [])
+
+  // =====================================================
+  // SETUP AUTO-REFRESH INTERVAL
+  // =====================================================
+
+  useEffect(() => {
+    if (refreshInterval <= 0) {
+      console.log('Dashboard: Refresh disabled (interval <= 0)')
+      return
+    }
+
+    console.log(`Dashboard: Setting up refresh interval (${refreshInterval}s)`)
+    
+    // Immediately refresh on interval change
+    handleRefresh()
+
+    const intervalId = setInterval(() => {
+      console.log(`Dashboard: Auto-refreshing (interval: ${refreshInterval}s)`)
+      handleRefresh()
+    }, refreshInterval * 1000)
+
+    return () => {
+      console.log('Dashboard: Clearing refresh interval')
+      clearInterval(intervalId)
+    }
+  }, [refreshInterval, handleRefresh])
 
   // =====================================================
   // DOWNLOAD PDF FUNCTION
@@ -64,7 +126,7 @@ export default function Dashboard() {
       const token = localStorage.getItem('token')
 
       const response = await fetch(
-        'http://localhost:9021/reports/download',
+        `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/reports/download`,
         {
           method: 'GET',
           headers: {
@@ -156,7 +218,7 @@ export default function Dashboard() {
           </h1>
 
           <p className="text-xs text-white/30 font-body mt-1">
-            Real-time telecom analytics · Updated every 30s
+            Real-time telecom analytics · Updated every {refreshInterval < 60 ? refreshInterval + 's' : (refreshInterval / 60).toFixed(0) + 'm'}
           </p>
 
         </div>

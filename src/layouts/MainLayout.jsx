@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, MessageSquare } from 'lucide-react'
@@ -12,7 +12,30 @@ export default function MainLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [aiEnabled, setAiEnabled] = useState(true)
   const location = useLocation()
+
+  // Load AI enabled setting from localStorage
+  useEffect(() => {
+    const loadSettings = () => {
+      try {
+        const settings = localStorage.getItem('platformSettings')
+        if (settings) {
+          const parsed = JSON.parse(settings)
+          setAiEnabled(parsed.aiEnabled !== false)
+          console.log('MainLayout: AI enabled setting:', parsed.aiEnabled !== false)
+        }
+      } catch (err) {
+        console.error('MainLayout: Failed to load settings:', err)
+      }
+    }
+    
+    loadSettings()
+    
+    // Check for settings changes
+    const settingsInterval = setInterval(loadSettings, 5000)
+    return () => clearInterval(settingsInterval)
+  }, [])
 
   return (
     <AnomalyProvider>
@@ -64,15 +87,15 @@ export default function MainLayout({ children }) {
         </motion.div>
       </main>
 
-      {/* Floating AI Chat button */}
-      {!chatOpen && (
+      {/* Floating AI Chat button - Only show if AI is enabled */}
+      {!chatOpen && aiEnabled && (
         <motion.button
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setChatOpen(true)}
-          className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-2xl flex items-center justify-center"
+          className="fixed bottom-20 right-6 z-40 w-14 h-14 rounded-2xl flex items-center justify-center"
           style={{
             background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
             boxShadow: '0 0 30px rgba(37,99,235,0.25), 0 8px 20px rgba(0,0,0,0.3)',
@@ -88,8 +111,8 @@ export default function MainLayout({ children }) {
         </motion.button>
       )}
 
-      {/* AI Chatbot */}
-      <AIChatbot open={chatOpen} onClose={() => setChatOpen(false)} />
+      {/* AI Chatbot - Only render if AI is enabled */}
+      {aiEnabled && <AIChatbot open={chatOpen} onClose={() => setChatOpen(false)} />}
       </div>
     </AnomalyProvider>
   )
